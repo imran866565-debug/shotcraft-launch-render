@@ -1,0 +1,51 @@
+name: Render Solstice One launch video
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Ensure Remotion browser
+        run: npx remotion browser ensure
+
+      - name: Render full mix (music + SFX + voice)
+        run: npx remotion render AiflPromo --props='{"bgm":true}' product-launch-full-mix.mp4
+
+      - name: Render no-music mix (voice + SFX only)
+        run: npx remotion render AiflPromo --props='{"bgm":false}' product-launch-no-music.mp4
+
+      - name: Probe outputs
+        run: |
+          ls -la *.mp4
+          ffprobe -v error -show_entries stream=codec_type,codec_name,width,height -show_entries format=duration,size -of default=nw=1 product-launch-full-mix.mp4
+          ffprobe -v error -show_entries stream=codec_type,codec_name,width,height -show_entries format=duration,size -of default=nw=1 product-launch-no-music.mp4
+
+      - name: Publish release v1.0
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0
+          name: Solstice One launch video v1.0
+          body: |
+            Solstice One — fictional smart circadian light launch film (35.4s, 1920x1080, 30fps).
+            - product-launch-full-mix.mp4 — background music + SFX + male energetic voiceover
+            - product-launch-no-music.mp4 — same voiceover + SFX, no background music
+          files: |
+            product-launch-full-mix.mp4
+            product-launch-no-music.mp4
