@@ -31,6 +31,9 @@ jobs:
       - name: Render no-music mix (voice + SFX only)
         run: npx remotion render AiflPromo --props='{"bgm":false}' product-launch-no-music.mp4
 
+      - name: Install ffmpeg (ffprobe for the probe step; ubuntu-26.04 has none)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+
       - name: Probe outputs
         run: |
           ls -la *.mp4
